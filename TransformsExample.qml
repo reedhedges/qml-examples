@@ -3,6 +3,10 @@ import QtQuick.Controls
 import QtQuick.Shapes
 import QtQuick.Layouts
 
+
+// This example shows how to transform an image to show the image positioned (pan), oriented (rotate) and scaled (zoomed)
+// within a view, relative to a fixed pointer or focus point or reticule in the center of that view (or offset within the view).
+
 Window {
    id: mainWindow
    title: qsTr("Transforms Example")
@@ -22,10 +26,19 @@ Window {
       property int viewCenterX: viewWidth / 2
       property int viewCenterY: viewHeight / 2
 
+      property int pointerPosX: pointerPosXInput.value //viewCenterX
+      property int pointerPosY: pointerPosYInput.value //viewCenterY
+
       Image {
           source: "qrc:/TransformsExample/grid-1000x1000.png"
           sourceSize.width: 1000
           sourceSize.height: 1000
+
+          // The image position and angle are transformed with inverted input values,
+          // and offset to the center of the view,
+          // because the input values represent the position and orientation of the
+          // fixed pointer (positioned at the center of the view), relative to the image.
+          // Note the order of the transform steps.
           transform: [
               Translate {
                   x: (-xInput.value) + view.viewCenterX
@@ -33,22 +46,22 @@ Window {
               },
               Rotation {
                   angle: -rotInput.value
-                  origin.x: rotOriginXInput.value
-                  origin.y: rotOriginYInput.value
+                  origin.x: view.pointerPosX //rotOriginXInput.value
+                  origin.y: view.pointerPosY //rotOriginYInput.value
               },
               Scale {
                   xScale: scaleInput.value / 100.0
                   yScale: scaleInput.value / 100.0
-                  origin.x: scaleOriginXInput.value
-                  origin.y: scaleOriginYInput.value
+                  origin.x: view.pointerPosX // scaleOriginXInput.value
+                  origin.y: view.pointerPosY // scaleOriginYInput.value
               }
           ]
       }
 
       Shape {
-          id: centerMarker
-          x: view.viewCenterX
-          y: view.viewCenterY
+          id: centerPointer
+          x: view.pointerPosX
+          y: view.pointerPosY
 
           // square around center of view with an arrow on top:
           ShapePath {
@@ -137,45 +150,66 @@ Window {
           Text { text: "View Center = " }
           Text { text: `${view.viewCenterX}, ${view.viewCenterY}` }
 
-          Text { text: "Rot. Origin X:" }
+          Text { text: "Pointer Pos X:" }
           SpinBox {
-              id: rotOriginXInput
+              id: pointerPosXInput
               value: view.viewCenterX
-              from: -1000
+              from: 0
               to: 1000
               editable: true
               stepSize: 10
           }
 
-          Text { text: "Rot. Origin Y:" }
+          Text {text: "Pointer Pos Y:" }
           SpinBox {
-              id: rotOriginYInput
+              id: pointerPosYInput
               value: view.viewCenterY
-              from: -1000
+              from: 0
               to: 1000
               editable: true
               stepSize: 10
           }
 
-          Text { text: "Scale Origin X:" }
-          SpinBox {
-              id: scaleOriginXInput
-              value: view.viewCenterX
-              from: -1000
-              to: 1000
-              editable: true
-              stepSize: 10
-          }
+          // Uncomment if you want controls to modify transform origins directly:
+//          Text { text: "Rot. Origin X:" }
+//          SpinBox {
+//              id: rotOriginXInput
+//              value: view.viewCenterX
+//              from: -1000
+//              to: 1000
+//              editable: true
+//              stepSize: 10
+//          }
 
-          Text { text: "Scale Origin Y:" }
-          SpinBox {
-              id: scaleOriginYInput
-              value: view.viewCenterY
-              from: -1000
-              to: 1000
-              editable: true
-              stepSize: 10
-          }
+//          Text { text: "Rot. Origin Y:" }
+//          SpinBox {
+//              id: rotOriginYInput
+//              value: view.viewCenterY
+//              from: -1000
+//              to: 1000
+//              editable: true
+//              stepSize: 10
+//          }
+
+//          Text { text: "Scale Origin X:" }
+//          SpinBox {
+//              id: scaleOriginXInput
+//              value: view.viewCenterX
+//              from: -1000
+//              to: 1000
+//              editable: true
+//              stepSize: 10
+//          }
+
+//          Text { text: "Scale Origin Y:" }
+//          SpinBox {
+//              id: scaleOriginYInput
+//              value: view.viewCenterY
+//              from: -1000
+//              to: 1000
+//              editable: true
+//              stepSize: 10
+//          }
       }
     }
    }
