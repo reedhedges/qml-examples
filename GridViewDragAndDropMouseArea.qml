@@ -11,11 +11,10 @@ Window {
     Column {
         id: mainItemsColumn
 
-        Item { // Container for GridView (could add other controls if desired), plus MouseArea of same size:
-
+        Item {
             id: dataGridContainer
             width: parent.width
-            height: dataGridView.height // todo could move dynamic properties from GridView up here instead
+            height: dataGridView.height
 
 
             GridView {
@@ -33,19 +32,30 @@ Window {
 
                 snapMode: GridView.SnapToRow
 
+                displaced: Transition {
+                    NumberAnimation {
+                        properties: "x,y"
+                        easing.type: Easing.OutQuad
+                    }
+                }
 
                 delegate: Rectangle {
                     id: dataItemDelegate
 
                     required property string dLabel
                     required property string dText
+                    required property int index
 
+                    onIndexChanged: console.log(`Index changed to ${index}. datagrid dragging item is ${dataGridViewMouseHandler.draggingItemIndex}. dragtarget is ${dataGridViewMouseHandler.dragTargetIndex}`)
+
+                    property bool dragging : index === dataGridViewMouseHandler.draggingItemIndex
+                    property bool dragTarget : index === dataGridViewMouseHandler.dragTargetIndex
 
                     width: dataGridView.cellWidth
                     height: dataGridView.cellHeight
                     border.color: "darkgrey"
                     border.width: dataGridView.borderWidth
-                    color:  "white"
+                    color: dragging ? "lightsteelblue" : (dragTarget ? "lightpink" : "white")
 
                     Column {
                         anchors.fill: parent
@@ -86,8 +96,28 @@ Window {
                 id: dataGridViewMouseHandler
                 anchors.fill: parent
                 property int prevY: -1
-
+                property int draggingItemIndex: -1
+                property int dragTargetIndex: -1
                 onPositionChanged: function (mouseEvent) {
+                    if(draggingItemIndex !== -1)
+                    {
+                        // handle drag
+                        if(mouseEvent.x < 0 || mouseEvent.x > dataGridView.width || mouseEvent.y < 0 || mouseEvent.y > dataGridView.height)
+                            return;
+                        let toIndex = dataGridView.indexAt(mouseEvent.x, mouseEvent.y);
+                        if(toIndex !== -1 && toIndex !== draggingItemIndex)
+                        {
+                            //if(toIndex !== 0) toIndex -= 1;
+                            const item = dataGridView.itemAtIndex(toIndex);
+                            console.log(`Moving item #${draggingItemIndex} to place of item with label "${item.dLabel}"`);
+                            item.color = "lightpink";
+                            dataGridView.model.move(draggingItemIndex, toIndex, 1);
+                            dragTargetIndex = -1;
+                        }
+                        return;
+                    }
+
+                    // otherwise resize
                     if(pressed && prevY !== -1)
                     {
                        const d = mouseEvent.y - prevY ;
@@ -102,6 +132,18 @@ Window {
 
                 function item_released() {
                     prevY = -1;
+                    if(draggingItemIndex !== -1)
+                    {
+                        const item = dataGridView.itemAtIndex(draggingItemIndex);
+                        item.color = "white";
+                    }
+                    draggingItemIndex = -1;
+                    if(dragTargetIndex !== -1)
+                    {
+                        const item = dataGridView.itemAtIndex(dragTargetIndex);
+                        item.color = "white";
+                    }
+                    dragTargetIndex = -1;
                 }
                 onReleased: item_released();
                 onCanceled: item_released();
@@ -111,6 +153,15 @@ Window {
                         dataGridView.height = dataGridView.minHeight;
                     else
                         dataGridView.height = dataGridView.maxHeight;
+                }
+                onPressAndHold: function (mouseEvent) {
+                    const i = dataGridView.indexAt(mouseEvent.x, mouseEvent.y);
+                    const item = dataGridView.itemAt(mouseEvent.x, mouseEvent.y);
+                    console.log(`Press and hold over data item #${i}`);
+                    if(item) console.log(`label ${item.dLabel}`);
+                    draggingItemIndex = i;
+                    if(i === -1) return;
+                    item.dragging = true;
                 }
             }
 

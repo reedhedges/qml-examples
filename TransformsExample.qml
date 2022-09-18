@@ -10,11 +10,23 @@ import QtQuick.Layouts
 Window {
    id: mainWindow
    title: qsTr("Transforms Example")
-   height: 600
-   width: 800
+   height: 800
+   width: 1000
    visible: true
 
+   Pane {
+       id: topPane
+       width: mainWindow.width
+       height: 100
+       Text {
+           text: "This is a panel at the top of the window."
+       }
+   }
+
    Row {
+    id: viewAndControlsRow
+    anchors.top: topPane.bottom
+
     Rectangle {
       id: view
       height: mainWindow.height
@@ -26,13 +38,10 @@ Window {
       property int viewCenterX: viewWidth / 2
       property int viewCenterY: viewHeight / 2
 
-      property int pointerPosX: pointerPosXInput.value //viewCenterX
-      property int pointerPosY: pointerPosYInput.value //viewCenterY
+      property int pointerPosX: viewCenterX + pointerPosXInput.value //viewCenterX
+      property int pointerPosY: viewCenterY + pointerPosYInput.value //viewCenterY
 
-      Image {
-          source: "qrc:/TransformsExample/grid-1000x1000.png"
-          sourceSize.width: 1000
-          sourceSize.height: 1000
+      Item {
 
           // The image position and angle are transformed with inverted input values,
           // and offset to the center of the view,
@@ -41,8 +50,8 @@ Window {
           // Note the order of the transform steps.
           transform: [
               Translate {
-                  x: (-xInput.value) + view.viewCenterX
-                  y: (-yInput.value) + view.viewCenterY
+                  x: (-xInput.value) + view.pointerPosX
+                  y: (-yInput.value) + view.pointerPosY
               },
               Rotation {
                   angle: -rotInput.value
@@ -56,14 +65,39 @@ Window {
                   origin.y: view.pointerPosY // scaleOriginYInput.value
               }
           ]
+
+          Image {
+              source: "qrc:/TransformsExample/grid-500x1000.png"
+              sourceSize.width: 500
+              sourceSize.height: 1000
+          }
+
+          // blue arrow pointing at a certain pixel
+          Shape {
+              x: selectedPixelXInput.value
+              y: selectedPixelYInput.value
+              id: selectedPixel
+              ShapePath {
+                  strokeWidth: 3
+                  strokeColor: "blue"
+                  fillColor: "transparent"
+                  startX: 0
+                  startY: 0
+                  PathLine { x: 15; y: 15 }
+                  PathMove { x: 0; y: 0 }
+                  PathLine { x: 0; y: 10 }
+                  PathMove { x: 0; y: 0 }
+                  PathLine { x: 10; y: 0 }
+              }
+          }
+
       }
 
+      // red square around focal point (grid etc. are transformed around this) with an arrow pointing up.
       Shape {
           id: centerPointer
           x: view.pointerPosX
           y: view.pointerPosY
-
-          // square around center of view with an arrow on top:
           ShapePath {
               strokeWidth: 2
               strokeColor: "red"
@@ -85,8 +119,8 @@ Window {
       MouseArea {
           anchors.fill: parent
           cursorShape: Qt.CrossCursor
-          onClicked: {
-              console.log(`Click on imageContainer at  ${mouseX}, ${mouseY}`);
+          onClicked: (evt) => {
+              console.log(`Click on imageContainer at  ${evt.x}, ${evt.y}`);
           }
           propagateComposedEvents: true
       }
@@ -95,7 +129,7 @@ Window {
     Pane {
       id: controls
       height: mainWindow.height
-      width: 225
+      width: 300
       GridLayout {
           columns: 2
           flow: GridLayout.LeftToRight
@@ -137,7 +171,7 @@ Window {
           SpinBox {
               id: scaleInput
               from: 1
-              to: 100
+              to: 250
               editable: true
               stepSize: 10
               value: 100
@@ -150,20 +184,40 @@ Window {
           Text { text: "View Center = " }
           Text { text: `${view.viewCenterX}, ${view.viewCenterY}` }
 
-          Text { text: "Pointer Pos X:" }
+          Text { text: "Reticule Pointer Offset X:" }
           SpinBox {
               id: pointerPosXInput
-              value: view.viewCenterX
+              value: 0 //view.viewCenterX
+              from: -1000 
+              to: 1000
+              editable: true
+              stepSize: 10
+          }
+
+          Text {text: "Reticule Pointer Offset Y:" }
+          SpinBox {
+              id: pointerPosYInput
+              value: 0 //view.viewCenterY
+              from: -1000
+              to: 1000
+              editable: true
+              stepSize: 10
+          }
+
+          Text { text: "Arrow X: " }
+          SpinBox {
+              id: selectedPixelXInput
+              value: 0
               from: 0
               to: 1000
               editable: true
               stepSize: 10
           }
 
-          Text {text: "Pointer Pos Y:" }
+          Text { text: "Arrow Y: " }
           SpinBox {
-              id: pointerPosYInput
-              value: view.viewCenterY
+              id: selectedPixelYInput
+              value: 0
               from: 0
               to: 1000
               editable: true
