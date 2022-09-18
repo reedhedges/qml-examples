@@ -1,13 +1,16 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 
+#ifndef NAME
+#error Must define NAME preprocessor symbol in example_main.cpp
+#endif
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
-    const QUrl url(u"qrc:/ExpandGridViewClick/ExpandGridViewClick.qml"_qs);
+    const QUrl url(u"qrc:/"_qs + NAME + "/" + NAME + ".qml");
 
     // Abort on error loading main QML component:
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
