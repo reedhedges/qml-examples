@@ -1,28 +1,28 @@
 #include <string>
+#include <string_view>
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
 #include <QList>
 #include <QElapsedTimer>
 
 #include "LazyEvalProperties_DataSource.h"
 #include "LazyEvalProperties_DataItem.h"
 
-static const size_t num_data_items = 25; // how many total data items to create
-static const size_t num_data_items_enabled = 10; // how many data items that do reads (e.g. are visible)
 
 
-int test_main()
+// Testing basic method of "lazy evaluation" or "evaluation on read" of properties.  This moves calculations to the GUI thread however, potentially slowing it down.
+
+// See other examples to only calculate data if included in a certain data model or if a certain QML element is enabled (has true visible property).
+
+
+static const size_t num_data_items = 50; // how many total data items to create
+
+
+int test_main(DataSource& data_source, QList<DataItem>& data_items)
 {
-  DataSource data_source;
-
-  QList<DataItem> data_items;
-  for(int i = 0; i < num_data_items; ++i)
-  {
-    std::string name("DataItem");
-    name += std::to_string(i);
-    data_items.emplace_back(name, &data_source);
-  }
+  static const size_t num_data_items_enabled = 10; // how many data items to read in test_main()
 
   QElapsedTimer timer;
   QElapsedTimer totaltimer;
@@ -77,10 +77,9 @@ int test_main()
   return 0;
 }
 
-int gui_main(int argc, char *argv[])
+int gui_main(int argc, char *argv[], DataSource& data_source, QList<DataItem>& data_items)
 {
     QGuiApplication app(argc, argv);
-
     QQmlApplicationEngine engine;
     const QUrl url(u"qrc:/LazyEvalProperties/LazyEvalProperties.qml"_qs);
 
@@ -98,6 +97,17 @@ int gui_main(int argc, char *argv[])
         QCoreApplication::exit(-2);
     }, Qt::QueuedConnection);
 
+    // Properties
+    // Need a list of QObject pointers for QML data model
+    QList<QObject*> data_items_list_model;
+    data_items_list_model.reserve(data_items.size());
+    for(auto& d : data_items)
+    {
+        data_items_list_model.append(&d);
+    }
+    engine.rootContext()->setContextProperty("dataSource", &data_source);
+    engine.rootContext()->setContextProperty("dataItemsListModel", QVariant::fromValue(data_items_list_model));
+
     engine.load(url);
 
     return app.exec();
@@ -105,6 +115,21 @@ int gui_main(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-  return test_main();
-  // return gui_main(argc, argv);
+
+    DataSource data_source(0);
+
+    QList<DataItem> data_items;
+    data_items.reserve(num_data_items);
+    for(int i = 0; i < num_data_items; ++i)
+    {
+      std::string name("DataItem");
+      name += std::to_string(i);
+      data_items.emplace_back(name, &data_source);
+    }
+
+
+    if(argc > 1 && std::string_view(argv[1]) == "--test")
+        return test_main(data_source, data_items);
+    else
+        return gui_main(argc, argv, data_source, data_items);
 }

@@ -9,12 +9,14 @@
 #include "LazyEvalProperties_DataSource.h"
 
 // Define LAZY to only do expensive calculation on first read.
-// Omit this definition to perform the calculation on every DataItem each time the source data changes:
+// Omit this definition to perform the calculation on every DataItem each time the source data changes.
+// Note:  reads are still done by QML and long calculations may slow down QML GUI performance.
 #define LAZY 1
 
 
+
 // How long to artificially wait in do_calculation():
-static const unsigned long calculation_time_ms = 100;
+static const unsigned long calculation_time_ms = 200;
 
 static inline int do_calculation(int data)
 {
@@ -25,12 +27,15 @@ static inline int do_calculation(int data)
 
 class DataItem : public QObject {
   Q_OBJECT
-  Q_PROPERTY(int data READ getData NOTIFY notifyDataUpdated)
+  Q_PROPERTY(QString name MEMBER name CONSTANT)
+  Q_PROPERTY(int exampleData READ getData NOTIFY notifyDataUpdated)
+  Q_PROPERTY(bool exampleDataSet MEMBER derived_data_set)
 private:
-  std::string name;
+  QString name;
   DataSource *data_source;
   int derived_data;
   int data_updated_counter {0};
+  bool derived_data_set {false};
 
   void setup()
   {
@@ -38,7 +43,7 @@ private:
   }
 
 public:
-  explicit DataItem(const std::string& _name, DataSource *_data_source) : name(_name), data_source(_data_source)
+  explicit DataItem(const std::string& _name, DataSource *_data_source) : name(QString::fromStdString(_name)), data_source(_data_source)
   {
       setup();
   }
@@ -87,17 +92,19 @@ public:
 #ifdef LAZY
   int getData()
   {
+    qDebug() << name << ".getData(): our counter is" << data_updated_counter << ", source counter is" << data_source->getUpdateCounter() << ", derived_data_set is " << derived_data_set << " source data is " << data_source->getData();
     // If source's data has changed (check by checking its counter), recalculate our derived data.
-    if(data_updated_counter != data_source->getUpdateCounter())
+    if(!derived_data_set || (data_updated_counter != data_source->getUpdateCounter()))
     {
-      qDebug() << name.c_str() << ".getData_Lazy(): our counter is" << data_updated_counter << ", source counter is" << data_source->getUpdateCounter() << ", source data is " << data_source->getData() << ", recalculating derived data...";
+      qDebug() << "\t recalculating derived data...";
       derived_data = do_calculation(data_source->getData());
-      qDebug() << "\tour derived data is now" << derived_data;
-      ++data_updated_counter;
+      qDebug() << "\t our derived data is now" << derived_data;
+      data_updated_counter = data_source->getUpdateCounter();
+      derived_data_set = true;
     }
     else
     {
-      qDebug() << name.c_str() << ".getData_Lazy(): returning cached derived data:" << derived_data;
+      qDebug() << "\t returning cached derived data:" << derived_data;
     }
     return derived_data;
   }
@@ -107,6 +114,7 @@ public:
       return derived_data;
   }
 #endif
+
 
   virtual ~DataItem() {}
    
