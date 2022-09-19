@@ -59,3 +59,10 @@ example(TransformsExample
 example(CircleEllipseExample
     QML_FILES CircleEllipseExample.qml Circle.qml Ellipse.qml
 )
+
+qt_add_executable(LazyEvalPropertiesExample LazyEvalProperties.cpp LazyEvalProperties_DataSource.h LazyEvalProperties_DataItem.h)
+qt_add_qml_module(LazyEvalPropertiesExample
+    URI LazyEvalProperties
+    VERSION 1.0
+    QML_FILES LazyEvalProperties.qml 
+)
