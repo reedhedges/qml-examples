@@ -6,6 +6,11 @@ The goal is to avoid unneccesary computation of data which won't be displayed, o
 
 Data is provided by DataItem objects (QObjects with properties that could be members of a data model), each of which calculates its data value based on one DataSource's input data value, which is expected to change periodically or spuriously at any time. 
 
-Other ideas are 
-  * only calculate data during update if included in a certain data model or if a certain QML element is enabled (has true visible property).
-  * Use a Loader in GUI views, which puts a request in a worker thread (in QML Javascript or in C++) that does the read asynchronously from GUI display.  Check DataItem first to know whether we should do this (because recalculation is needed) or to just display a normal element or delegate in the view with a direct read (because we'll be getting the cached precalculated data).
+A Loader object is used to defer any reads by the GUI if an item has been omitted by e.g. the ListView.
+
+Another option is to use the "visible" QML property of the data item view delegates to trigger calculation.  
+
+Change the macros at the top of DataItem.h to select "calculate on read" or "on visible" or disable both to do calculations of all DataItems whenever source data updates (on update signal from DataSource). 
+
+There is also an option to precalculate DataItem values in the DataItem constructor for the first N items created.  This can be used to move the calculation to creation time rather than in the GUI display if you
+expect a certain number of DataItem views to likely be used initially (e.g. in the ListView).  

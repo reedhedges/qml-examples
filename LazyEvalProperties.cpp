@@ -11,16 +11,14 @@
 #include "LazyEvalProperties_DataItem.h"
 
 
+size_t DataItem::initial_precalc_counter = 0;
 
-// Testing basic method of "lazy evaluation" or "evaluation on read" of properties.  This moves calculations to the GUI thread however, potentially slowing it down.
-
-// See other examples to only calculate data if included in a certain data model or if a certain QML element is enabled (has true visible property).
 
 
 static const size_t num_data_items = 50; // how many total data items to create
 
 
-int test_main(DataSource& data_source, QList<DataItem>& data_items)
+int test_main(DataSource& data_source, QList<DataItem*>& data_items)
 {
   static const size_t num_data_items_enabled = 10; // how many data items to read in test_main()
 
@@ -37,14 +35,14 @@ int test_main(DataSource& data_source, QList<DataItem>& data_items)
   timer.restart();
 
   for(int i = 0; i < num_data_items_enabled; ++i) {
-        qDebug() << "read #" << i << ":" << data_items[i].getData();
+        qDebug() << "read #" << i << ":" << data_items[i]->getData();
   }
   qDebug() << "First reads took " << timer.elapsed() << "ms";
 
   timer.restart();
 
   for(int i = 0; i < num_data_items_enabled; ++i) {
-        qDebug() << "read #" << i << ":" << data_items[i].getData();
+        qDebug() << "read #" << i << ":" << data_items[i]->getData();
   }
 
   qDebug() << "Second reads took " << timer.elapsed() << "ms";
@@ -61,7 +59,7 @@ int test_main(DataSource& data_source, QList<DataItem>& data_items)
   timer.restart();
 
   for(int i = 0; i < num_data_items_enabled; ++i) {
-        qDebug() << "read #" << i << ":" << data_items[i].getData();
+        qDebug() << "read #" << i << ":" << data_items[i]->getData();
   }
 
   qDebug() << "First reads took " << timer.elapsed() << "ms";
@@ -69,7 +67,7 @@ int test_main(DataSource& data_source, QList<DataItem>& data_items)
   timer.restart();
   
   for(int i = 0; i < num_data_items_enabled; ++i) {
-        qDebug() << "read #" << i << ":" << data_items[i].getData();
+        qDebug() << "read #" << i << ":" << data_items[i]->getData();
   }
   
   qDebug() << "Second reads took " << timer.elapsed() << "ms";
@@ -77,7 +75,7 @@ int test_main(DataSource& data_source, QList<DataItem>& data_items)
   return 0;
 }
 
-int gui_main(int argc, char *argv[], DataSource& data_source, QList<DataItem>& data_items)
+int gui_main(int argc, char *argv[], DataSource& data_source, QList<DataItem*>& data_items)
 {
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
@@ -103,13 +101,15 @@ int gui_main(int argc, char *argv[], DataSource& data_source, QList<DataItem>& d
     data_items_list_model.reserve(data_items.size());
     for(auto& d : data_items)
     {
-        data_items_list_model.append(&d);
+        data_items_list_model.append(static_cast<QObject*>(d));
     }
     engine.rootContext()->setContextProperty("dataSource", &data_source);
     engine.rootContext()->setContextProperty("dataItemsListModel", QVariant::fromValue(data_items_list_model));
 
+    qDebug("Loading QML...");
     engine.load(url);
 
+    qDebug("Running...");
     return app.exec();
 }
 
@@ -118,13 +118,14 @@ int main(int argc, char *argv[])
 
     DataSource data_source(0);
 
-    QList<DataItem> data_items;
+    QList<DataItem*> data_items;
     data_items.reserve(num_data_items);
     for(int i = 0; i < num_data_items; ++i)
     {
       std::string name("DataItem");
       name += std::to_string(i);
-      data_items.emplace_back(name, &data_source);
+      // can't move Qobjects: data_items.emplace_back(name, &data_source);
+      data_items.append(new DataItem(name, &data_source));
     }
 
 

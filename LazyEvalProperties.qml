@@ -45,7 +45,7 @@ Window {
                 }
                 SpinBox {
                     id: listViewCacheBufferInput
-                    value: 0
+                    value: 200
                     stepSize: 100
                     from: 0
                     to: 3000
@@ -57,6 +57,31 @@ Window {
                 id: listVisibleCheckBox
                 checked: true
                 text: "List Visible"
+            }
+
+            CheckBox {
+                width: parent.width
+                id: listLoaderAsyncCheckBox
+                checked: true
+                text: "List item Loaders asynchronous"
+            }
+        }
+
+        component DataItemView: Text {
+            visible: listVisibleCheckBox.checked
+            width: dataItemsListView.width
+            height: 20
+            text: `${dataItemName} = ${dataItemData}`
+            Component.onCompleted: {
+                console.log(`list view delegate ${dataItemName} created`);
+                dataItemVisible = visible;
+            }
+            Component.onDestruction: {
+                console.log(`list view delegate ${dataItemName} destroyed`);
+                dataItemVisible = false;
+            }
+            onVisibleChanged: {
+                dataItemVisible = visible;
             }
         }
 
@@ -77,12 +102,11 @@ Window {
                 spacing: 5
                 clip: true
                 //onCountChanged: { console.log(`ListView count ${count}`); }
-                delegate: Text {
-                    visible: listVisibleCheckBox.checked
-                    width: dataItemsListView.width
-                    height: 20
-                    text: `${name} = ${exampleData}`
+                delegate: Loader {
+                    asynchronous: listLoaderAsyncCheckBox.checked
+                    sourceComponent: DataItemView {}
                 }
+                //delegate: DataItemView { }
                 ScrollBar.vertical: ScrollBar {
                     active: true
                 }
