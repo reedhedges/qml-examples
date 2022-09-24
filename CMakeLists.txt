@@ -60,6 +60,10 @@ example(CircleEllipseExample
     QML_FILES CircleEllipseExample.qml Circle.qml Ellipse.qml
 )
 
+example(ToggleButtonGroupExample
+    QML_FILES ToggleButtonGroupExample.qml ToggleButtonGroup.qml
+)
+
 qt_add_executable(LazyEvalPropertiesExample LazyEvalProperties.cpp LazyEvalProperties_DataSource.h LazyEvalProperties_DataItem.h)
 qt_add_qml_module(LazyEvalPropertiesExample
     URI LazyEvalProperties
