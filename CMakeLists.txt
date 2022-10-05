@@ -70,3 +70,7 @@ qt_add_qml_module(LazyEvalPropertiesExample
     VERSION 1.0
     QML_FILES LazyEvalProperties.qml 
 )
+
+example(CircleShapeExample
+  QML_FILES CircleShapeExample.qml CircleShape.qml
+)
