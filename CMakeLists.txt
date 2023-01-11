@@ -4,6 +4,7 @@ project(QMLExamples VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 20)
 
 find_package(Qt6 COMPONENTS Quick  REQUIRED) 
 
@@ -22,7 +23,6 @@ set_property(GLOBAL
 # A CMake target will be created based on the first argument as well. ("${name}ExampleApp")
 macro(example)
   set(name ${ARGV0})
-    #message(STATUS "name=${name} ARGV=${ARGV}")
   set(targetname ${name})
   string(APPEND targetname "ExampleApp")
   qt_add_executable(${targetname} example_main.cpp)
@@ -31,6 +31,7 @@ macro(example)
   target_compile_definitions(${targetname} PRIVATE ${def})
   qt_add_qml_module(${targetname} VERSION 1.0 URI ${ARGV}) #${name} VERSION 1.0 ${qmlargs})
 endmacro()
+
 
 example(ExpandGridViewDrag QML_FILES ExpandGridViewDrag.qml ExampleListModel.qml RESOURCES image.png)
 
@@ -74,3 +75,15 @@ qt_add_qml_module(LazyEvalPropertiesExample
 example(CircleShapeExample
   QML_FILES CircleShapeExample.qml CircleShape.qml
 )
+
+qt_add_executable(AsyncExample
+  AsyncMain.cpp
+  AsyncTimerExample.h AsyncTimerExample.cpp
+  AsyncThreadExample.h AsyncThreadExample.cpp
+)
+qt_add_qml_module(AsyncExample
+  URI dev.dogsbody.AsyncExamples
+  VERSION 1.0
+  QML_FILES Async.qml
+)
+
