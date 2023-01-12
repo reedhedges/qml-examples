@@ -79,11 +79,13 @@ example(CircleShapeExample
 qt_add_executable(AsyncExample
   AsyncMain.cpp
   AsyncTimerExample.h AsyncTimerExample.cpp
-  AsyncThreadExample.h AsyncThreadExample.cpp
+  AsyncQThreadExample.h AsyncQThreadExample.cpp
+  AsyncCppThreadExample.h AsyncCppThreadExample.cpp
 )
 qt_add_qml_module(AsyncExample
   URI dev.dogsbody.AsyncExamples
   VERSION 1.0
   QML_FILES Async.qml
+  RESOURCES error.png
 )
 

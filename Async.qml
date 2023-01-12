@@ -30,32 +30,126 @@ Window {
       running: Examples.TimerExample.running
   }
 
-  // Thread example:
+  // C++ Thread example:
 
   Button {
-      id: beginThreadExampleButton
+      id: beginCppThreadExampleButton
       x: 10
       y: 40
-      text: "Begin Thread Example"
+      text: "Begin std::thread Example"
       onPressed: {
-          Examples.ThreadExample.beginWork();
+          Examples.CppThreadExample.beginWork();
       }
-      enabled: ! Examples.ThreadExample.running
+      enabled: ! Examples.CppThreadExample.running
   }
 
   BusyIndicator {
-      x: beginThreadExampleButton.x + 200
-      y: beginThreadExampleButton.y
-      running: Examples.ThreadExample.running
+      x: beginCppThreadExampleButton.x + 200
+      y: beginCppThreadExampleButton.y
+      running: Examples.CppThreadExample.running && ! Examples.CppThreadExample.haveError
+      id: cppThreadExampleBusyIndicator
   }
 
   ProgressBar {
-      visible: Examples.ThreadExample.running
-      x: beginThreadExampleButton.x + 400
-      y: beginThreadExampleButton.y
-      value: Examples.ThreadExample.progress
+      visible: Examples.CppThreadExample.running || Examples.CppThreadExample.haveError
+      x: beginCppThreadExampleButton.x + 300
+      y: beginCppThreadExampleButton.y
+      value: Examples.CppThreadExample.progress
+      from: 0.0
+      to: 1.0
+      indeterminate: (Examples.CppThreadExample.progress === -1.0) || Examples.CppThreadExample.haveError
+      height: 15
   }
 
+  Image {
+      source: 'error.png'
+      visible: Examples.CppThreadExample.haveError
+      x: cppThreadExampleBusyIndicator.x
+      y: cppThreadExampleBusyIndicator.y
+      z: cppThreadExampleBusyIndicator.z + 1
+        width: cppThreadExampleBusyIndicator.width
+        height: cppThreadExampleBusyIndicator.height
+  }
 
+  Button {
+      x: beginCppThreadExampleButton.x + 500
+      y: beginCppThreadExampleButton.y
+      text: "Cause Error"
+      onPressed: {
+          Examples.CppThreadExample.requestErrorInThread();
+      }
+      enabled: Examples.CppThreadExample.running
+  }
+
+  Button {
+      x: beginCppThreadExampleButton.x + 600
+      y: beginCppThreadExampleButton.y
+      text: "Cause 3s Stall"
+      onPressed: {
+          Examples.CppThreadExample.requestStallInThread();
+      }
+      enabled: Examples.CppThreadExample.running
+  }
+
+  // QThread example:
+
+  Button {
+      id: beginQThreadExampleButton
+      x: 10
+      y: 70
+      text: "Begin QThread Example"
+      onPressed: {
+          Examples.QThreadExample.beginWork();
+      }
+      enabled: ! Examples.QThreadExample.running
+  }
+
+  BusyIndicator {
+      x: beginQThreadExampleButton.x + 200
+      y: beginQThreadExampleButton.y
+      running: Examples.QThreadExample.running && ! Examples.QThreadExample.haveError
+      id: qThreadExampleBusyIndicator
+  }
+
+  ProgressBar {
+      visible: Examples.QThreadExample.running || Examples.QThreadExample.haveError
+      x: beginQThreadExampleButton.x + 300
+      y: beginQThreadExampleButton.y
+      value: Examples.QThreadExample.progress
+      from: 0.0
+      to: 1.0
+      indeterminate: (Examples.QThreadExample.progress === -1.0) || Examples.QThreadExample.haveError
+      height: 15
+  }
+
+  Image {
+      source: 'error.png'
+      visible: Examples.QThreadExample.haveError
+      x: qThreadExampleBusyIndicator.x
+      y: qThreadExampleBusyIndicator.y
+      z: qThreadExampleBusyIndicator.z + 1
+        width: qThreadExampleBusyIndicator.width
+        height: qThreadExampleBusyIndicator.height
+  }
+
+  Button {
+      x: beginQThreadExampleButton.x + 500
+      y: beginQThreadExampleButton.y
+      text: "Cause Error"
+      onPressed: {
+          Examples.QThreadExample.requestErrorInThread();
+      }
+      enabled: Examples.QThreadExample.running
+  }
+
+  Button {
+      x: beginQThreadExampleButton.x + 600
+      y: beginQThreadExampleButton.y
+      text: "Cause 3s Stall"
+      onPressed: {
+          Examples.QThreadExample.requestStallInThread();
+      }
+      enabled: Examples.QThreadExample.running
+  }
 
 }

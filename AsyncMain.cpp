@@ -9,23 +9,23 @@
     4. (not implemented yet) At program initialization, start a long running background thread that is normally idle, but which can
         handle Qt signals sent from the UI.
 
-    The interface between the QML UI and the C++ code is a small controller class with Q_INVOKABLE methods. This is
-    my preferred design when the general design and user's mental model of the application is to explicitly initiate
-    some action; but we could respond to property changes as well if that makes more sense.
+    For each case, the interface between the QML UI and the C++ code is a controller class with Q_INVOKABLE methods and properties.
 
-    In all cases, we start and stop a "busy" indicator via a boolean value; maybe other progress info is also provided.
-
-    In the thread cases Qt signals are used to safely communicate between the new thread and the main (UI) thread.
+    In all cases, we start and stop a "busy" indicator via a boolean value; we receive data updates and errors from the thread via Qt signals
+    (which are posted to the controller/interface QObject's signal queue, so are received in the main UI thread.)  To send
+    signals to the thread, we either use Qt signals (when the thread is QThread and a QObject with its own event loop and signal
+    queue, or atomic signal flags for C++ standard threads -- a more sophisticated message passing system could be used for
+    that if desired.)
 
     You could adapt these examples into re-usable utility classes that can be reused mulitple times in an application,
     especially an easy-to use and easy to extend version of the ThreadExample, that reduces the boiler plate needed
-    for each property/signal, thread management, etc.
+    for each property/signal, thread management, etc. Maybe there's a way to use QObject/QMetaObject, Q_PROPERTY,
+    etc. to generate/provide mechanism for easy updating of properties from threads via signals, and sending signals to thread (setting properties or sending signals)? (If we use
+    Q_PROPERTY in the thread's QObject, will much of this be there for us? But we also need to declare the signals
+    and connections, which is also boilerplate used for everything that could be automated). Also consider what data is sent back while the
+    thread is running (updates, errors, status/log messages), and what could be returned or made available to the initiator after the thread is completed.
 
     TODO try other asynchronous patterns/apis; promise based, etc
-
-    TODO show example with some kind of thread container or manager object that can do 
-    things like automatically join (wait for) threads on destruction, or signal threads to 
-    abort, on destruction, etc. (when these aren't normally done by whatever thread API we are using)
 
 */
 
@@ -34,7 +34,8 @@
 #include <QObject>
 
 #include "AsyncTimerExample.h"
-#include "AsyncThreadExample.h"
+#include "AsyncCppThreadExample.h"
+#include "AsyncQThreadExample.h"
 
 int main(int argc, char **argv)
 {
@@ -79,8 +80,11 @@ int main(int argc, char **argv)
   TimerExample timer_example;
   qmlRegisterSingletonInstance("dev.dogsbody.AsyncExamples", 1, 0, "TimerExample", &timer_example);
 
-  ThreadExample thread_example;
-  qmlRegisterSingletonInstance("dev.dogsbody.AsyncExamples", 1, 0, "ThreadExample", &thread_example);
+  CppThreadExample cppthread_example;
+  qmlRegisterSingletonInstance("dev.dogsbody.AsyncExamples", 1, 0, "CppThreadExample", &cppthread_example);
+
+  QThreadExample qthread_example;
+  qmlRegisterSingletonInstance("dev.dogsbody.AsyncExamples", 1, 0, "QThreadExample", &qthread_example);
 
 
   // Load QML:
